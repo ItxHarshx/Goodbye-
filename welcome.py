@@ -9,21 +9,20 @@ from typing import (
 from pyrogram.client import Client
 from pyrogram.errors import (
     ChannelPrivate,
+MessageDeleteForbidden,
     ChatWriteForbidden,
 )
 from pyrogram.types import Chat, Message, User
 
-from anjani import filters, plugin, util
+from anjani import plugin, util
 
 class Greeting(plugin.Plugin):
     name: ClassVar[str] = "Greetings"
     helpable: ClassVar[bool] = True
 
-    db: util.db.AsyncCollection
     chat_db: util.db.AsyncCollection
 
     async def on_load(self) -> None:
-        self.db = self.bot.db.get_collection("WELCOME")
         self.chat_db = self.bot.db.get_collection("CHATS")
 
 
