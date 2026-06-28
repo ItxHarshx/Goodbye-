@@ -1,45 +1,36 @@
-from html import escape
-from typing import ClassVar, Optional
-
-from pyrogram.errors import ChatWriteForbidden
-from pyrogram.types import Chat, Message, User
-
-from anjani import plugin
+from telegram import Update
+from telegram.ext import ContextTypes, MessageHandler, filters
 
 
-class Goodbye(plugin.Plugin):
-    name: ClassVar[str] = "Goodbye"
-    helpable: ClassVar[bool] = False
+# -------------------------
+# USER LEFT HANDLER
+# -------------------------
+async def goodbye(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    message = update.message
 
-    async def on_chat_action(self, message: Message) -> None:
-        chat = message.chat
+    if not message:
+        return
 
-        if not message.left_chat_member:
-            return
+    left_user = message.left_chat_member
 
-        # ignore bot itself
-        if message.left_chat_member.id == self.bot.uid:
-            return
+    # ignore bot itself
+    if not left_user or left_user.id == context.bot.id:
+        return
 
-        await self._member_leave(message)
+    text = f"👋 {left_user.mention_html()} left the chat."
 
-    async def _member_leave(self, message: Message) -> None:
-        chat = message.chat
-        user = message.left_chat_member
+    await context.bot.send_message(
+        chat_id=message.chat.id,
+        text=text,
+        parse_mode="HTML",
+        reply_to_message_id=message.message_id,
+    )
 
-        text = "👋 {mention} left the chat."
 
-        formatted_text = text.format(
-            mention=user.mention,
-            first=escape(user.first_name or ""),
-            id=user.id,
-        )
-
-        try:
-            await self.bot.client.send_message(
-                chat.id,
-                formatted_text,
-                reply_to_message_id=message.id,
-            )
-        except ChatWriteForbidden:
-            return
+# -------------------------
+# HANDLER SETUP
+# -------------------------
+def setup(application):
+    application.add_handler(
+        MessageHandler(filters.StatusUpdate.LEFT_CHAT_MEMBER, goodbye)
+    )
