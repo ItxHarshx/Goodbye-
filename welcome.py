@@ -1,4 +1,4 @@
-import asyncio
+
 from html import escape
 from typing import (
     Any,
@@ -8,16 +8,14 @@ from typing import (
 )
 
 from pyrogram.client import Client
-from pyrogram.enums.parse_mode import ParseMode
 from pyrogram.errors import (
     ChannelPrivate,
     ChatWriteForbidden,
     MessageDeleteForbidden,
 )
 from pyrogram.types import Chat, Message, User
-from pyrogram.types.messages_and_media.message import Str
 
-from anjani import command, filters, plugin, util
+from anjani import filters, plugin, util
 
 class Greeting(plugin.Plugin):
     name: ClassVar[str] = "Greetings"
@@ -136,92 +134,3 @@ class Greeting(plugin.Plugin):
             return clean.get("clean_service", True)
 
         return False  # Defaults off
-
-    @command.filters(filters.admin_only)
-    async def cmd_setgoodbye(self, ctx: command.Context) -> str:
-        """Set chat goodbye message"""
-        chat = ctx.chat
-        if ctx.input:
-            gby_text = Str(ctx.input).init(ctx.msg.entities[1:])
-        elif ctx.msg.reply_to_message:
-            gby_text = ctx.msg.reply_to_message.text or ctx.msg.reply_to_message.caption
-        else:
-            return await self.text(chat.id, "greetings-no-input")
-
-        ret, _ = await asyncio.gather(
-            self.text(chat.id, "cust-goodbye-set"), self.set_custom_goodbye(chat.id, gby_text)
-        )
-        return ret
-
-    @command.filters(filters.admin_only)
-    async def cmd_resetgoodbye(self, ctx: command.Context) -> str:
-        """Reset saved welcome message"""
-        chat = ctx.chat
-
-        ret, _ = await asyncio.gather(
-            self.text(chat.id, "reset-goodbye"), self.del_custom_goodbye(chat.id)
-        )
-        return ret
-
-
-    @command.filters(filters.admin_only)
-    async def cmd_goodbye(self, ctx: command.Context) -> Optional[str]:
-        """View current goodbye message"""
-        chat = ctx.chat
-        param = ctx.input.lower()
-        noformat = param == "noformat"
-
-        enabled = None
-        if param in {"yes", "on", "1"}:
-            enabled = True
-        elif param in {"no", "off", "0"}:
-            enabled = False
-        elif param and not noformat:
-            return await self.text(chat.id, "err-invalid-option")
-
-        if enabled is not None:
-            ret, _ = await asyncio.gather(
-                self.text(chat.id, "goodbye-set", "on" if enabled else "off"),
-                self.greeting_setting(chat.id, "should_goodbye", enabled),
-            )
-            return ret
-
-        setting, text, clean_service = await asyncio.gather(
-            self.is_goodbye(chat.id), self.left_message(chat.id), self.clean_service(chat.id)
-        )
-
-        if noformat:
-            parse_mode = ParseMode.DISABLED
-        else:
-            parse_mode = ParseMode.MARKDOWN
-
-        view_gby = await self.text(chat.id, "view-goodbye", setting, clean_service)
-        if ctx.chat.is_forum and not await self.get_action_topic(ctx.chat):
-            view_gby += "\n\n" + await self.text(
-                chat.id,
-                "greetings-topic-default",
-                f"https://t.me/{self.bot.user.username}?start=help_topic",
-            )
-
-        await ctx.respond(view_gby)
-        await ctx.respond(
-            text,
-            mode="reply",
-            parse_mode=parse_mode,
-            disable_web_page_preview=True,
-        )
-        return None
-
-    @command.filters(filters.admin_only)
-    async def cmd_cleanservice(self, ctx: command.Context, active: Optional[bool] = None) -> str:
-        """Clean service message on new members"""
-        chat = ctx.chat
-
-        if active is None:
-            return await self.text(chat.id, "err-invalid-option")
-
-        ret, _ = await asyncio.gather(
-            self.text(chat.id, "clean-serv-set", "on" if active else "off"),
-            self.greeting_setting(chat.id, "clean_service", active),
-        )
-        return ret
