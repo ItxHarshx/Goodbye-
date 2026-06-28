@@ -77,30 +77,24 @@ class Greeting(plugin.Plugin):
         }
 
     async def on_chat_action(self, message: Message) -> None:
-        chat = message.chat
-        reply_to = message.id
-        if message.left_chat_member and message.left_chat_member.id == self.bot.uid:
-            return
+    chat = message.chat
+    reply_to = message.id
 
-        # Clean service both for left member and new member if active
-        if await self.clean_service(chat.id):
-            try:
-                await message.delete()
-            except (MessageDeleteForbidden, ChannelPrivate):
-                pass
-            reply_to = 0
+    if message.left_chat_member and message.left_chat_member.id == self.bot.uid:
+        return
 
-        thread_id = await self.get_action_topic(chat)
-        if message.chat.is_forum and not thread_id:
-            self.log.debug(f"Chat {message.chat.id} is forum but no action topic set!")
-            # continue try to send on default (general) topic
+    if await self.clean_service(chat.id):
+        try:
+            await message.delete()
+        except (MessageDeleteForbidden, ChannelPrivate):
+            pass
+        reply_to = 0
 
-        if message.new_chat_members:
-            return await self._member_join(message, reply_to, thread_id)
+    thread_id = await self.get_action_topic(chat)
 
-        if message.left_chat_member:
-            return await self._member_leave(message, reply_to, thread_id)
-
+    if message.left_chat_member:
+        await self._member_leave(message, reply_to, thread_id)
+        
     async def _member_leave(
         self, message: Message, reply_to: int, thread_id: Optional[int]
     ) -> None:
