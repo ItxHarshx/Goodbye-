@@ -33,13 +33,6 @@ class Greeting(plugin.Plugin):
     if message.left_chat_member and message.left_chat_member.id == self.bot.uid:
         return
 
-    if await self.clean_service(chat.id):
-        try:
-            await message.delete()
-        except (MessageDeleteForbidden, ChannelPrivate):
-            pass
-        reply_to = 0
-
     thread_id = await self.get_action_topic(chat)
 
     if message.left_chat_member:
@@ -66,22 +59,6 @@ class Greeting(plugin.Plugin):
         )
     except ChatWriteForbidden:
         return
-
-    async def on_chat_migrate(self, message: Message) -> None:
-        new_chat = message.chat.id
-        old_chat = message.migrate_from_chat_id
-
-        await self.db.update_one(
-            {"chat_id": old_chat},
-            {"$set": {"chat_id": new_chat}},
-        )
-
-    async def on_plugin_backup(self, chat_id: int) -> MutableMapping[str, Any]:
-        welcome = await self.db.find_one({"chat_id": chat_id}, {"_id": False})
-        return {self.name: welcome} if welcome else {}
-
-    async def on_plugin_restore(self, chat_id: int, data: MutableMapping[str, Any]) -> None:
-        await self.db.update_one({"chat_id": chat_id}, {"$set": data[self.name]}, upsert=True)
 
     @staticmethod
     async def _build_text(
