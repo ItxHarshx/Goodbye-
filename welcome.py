@@ -47,21 +47,26 @@ class Greeting(plugin.Plugin):
         await self._member_leave(message, reply_to, thread_id)
         
     async def _member_leave(
-        self, message: Message, reply_to: int, thread_id: Optional[int]
-    ) -> None:
-        chat = message.chat
-        text = "👋 {mention} left the chat."
-        formatted_text = await self._build_text(text, left_member, chat, self.bot.client)
-        try:
-            msg = await self.bot.client.send_message(
-                chat.id,
-                formatted_text,
-                reply_to_message_id=reply_to if not thread_id else None,  # type: ignore
-                message_thread_id=thread_id,  # type: ignore
-            )
-        except ChatWriteForbidden:
-            return
+    self, message: Message, reply_to: int, thread_id: Optional[int]
+) -> None:
+    chat = message.chat
+    left_member = message.left_chat_member
 
+    text = "👋 {mention} left the chat."
+
+    formatted_text = await self._build_text(
+        text, left_member, chat, self.bot.client
+    )
+
+    try:
+        await self.bot.client.send_message(
+            chat.id,
+            formatted_text,
+            reply_to_message_id=reply_to if not thread_id else None,
+            message_thread_id=thread_id,
+        )
+    except ChatWriteForbidden:
+        return
 
     async def on_chat_migrate(self, message: Message) -> None:
         new_chat = message.chat.id
