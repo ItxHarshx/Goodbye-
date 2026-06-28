@@ -10,7 +10,6 @@ from pyrogram.client import Client
 from pyrogram.errors import (
     ChannelPrivate,
     ChatWriteForbidden,
-    MessageDeleteForbidden,
 )
 from pyrogram.types import Chat, Message, User
 
@@ -51,14 +50,7 @@ class Greeting(plugin.Plugin):
         self, message: Message, reply_to: int, thread_id: Optional[int]
     ) -> None:
         chat = message.chat
-        if not await self.is_goodbye(chat.id):
-            return
-
-        left_member = message.left_chat_member
-        text = await self.left_message(chat.id)
-        if not text:
-            text = await self.text(chat.id, "default-goodbye", noformat=True)
-
+        text = "👋 {mention} left the chat."
         formatted_text = await self._build_text(text, left_member, chat, self.bot.client)
         try:
             msg = await self.bot.client.send_message(
@@ -70,12 +62,6 @@ class Greeting(plugin.Plugin):
         except ChatWriteForbidden:
             return
 
-        previous = await self.previous_goodbye(chat.id, msg.id)
-        if previous:
-            try:
-                await self.bot.client.delete_messages(chat.id, previous)
-            except MessageDeleteForbidden:
-                pass
 
     async def on_chat_migrate(self, message: Message) -> None:
         new_chat = message.chat.id
