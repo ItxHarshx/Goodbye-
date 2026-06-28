@@ -2,14 +2,9 @@ import asyncio
 from html import escape
 from typing import (
     Any,
-    Callable,
     ClassVar,
-    Coroutine,
-    List,
     MutableMapping,
     Optional,
-    Tuple,
-    Union,
 )
 
 from pyrogram.client import Client
@@ -17,23 +12,12 @@ from pyrogram.enums.parse_mode import ParseMode
 from pyrogram.errors import (
     ChannelPrivate,
     ChatWriteForbidden,
-    MediaEmpty,
     MessageDeleteForbidden,
-    MessageEmpty,
 )
 from pyrogram.types import Chat, Message, User
 from pyrogram.types.messages_and_media.message import Str
 
 from anjani import command, filters, plugin, util
-from anjani.util.tg import (
-    Button,
-    Types,
-    build_button,
-    get_message_info,
-    parse_button,
-    revert_button,
-)
-
 
 class Greeting(plugin.Plugin):
     name: ClassVar[str] = "Greetings"
@@ -41,24 +25,11 @@ class Greeting(plugin.Plugin):
 
     db: util.db.AsyncCollection
     chat_db: util.db.AsyncCollection
-    SEND: MutableMapping[int, Callable[..., Coroutine[Any, Any, Optional[Message]]]]
 
     async def on_load(self) -> None:
         self.db = self.bot.db.get_collection("WELCOME")
         self.chat_db = self.bot.db.get_collection("CHATS")
 
-        self.SEND = {
-            Types.TEXT.value: self.bot.client.send_message,
-            Types.BUTTON_TEXT.value: self.bot.client.send_message,
-            Types.DOCUMENT.value: self.bot.client.send_document,
-            Types.PHOTO.value: self.bot.client.send_photo,
-            Types.VIDEO.value: self.bot.client.send_video,
-            Types.STICKER.value: self.bot.client.send_sticker,
-            Types.AUDIO.value: self.bot.client.send_audio,
-            Types.VOICE.value: self.bot.client.send_voice,
-            Types.VIDEO_NOTE.value: self.bot.client.send_video_note,
-            Types.ANIMATION.value: self.bot.client.send_animation,
-        }
 
     async def on_chat_action(self, message: Message) -> None:
     chat = message.chat
