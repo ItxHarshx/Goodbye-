@@ -9,8 +9,8 @@ from typing import (
 from pyrogram.client import Client
 from pyrogram.errors import (
     ChannelPrivate,
-MessageDeleteForbidden,
     ChatWriteForbidden,
+    MessageDeleteForbidden,
 )
 from pyrogram.types import Chat, Message, User
 
