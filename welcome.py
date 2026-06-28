@@ -75,13 +75,8 @@ class Greeting(plugin.Plugin):
         username = util.tg.get_username(user)
 
         return text.format(
-            first=escape(first_name),
-            last=escape(last_name) if last_name else "",
-            fullname=escape(full_name),
-            username=f"@{username}" if username else user.mention,
             mention=user.mention,
-            count=count,
-            chatname=escape(chat.title),
+            first=escape(user.first_name or ""),
             id=user.id,
         )
 
