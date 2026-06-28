@@ -127,20 +127,7 @@ class Greeting(plugin.Plugin):
         data = await self.chat_db.find_one({"chat_id": chat.id}, {"action_topic": True})
         return data.get("action_topic") if data else None
 
-    async def is_goodbye(self, chat_id: int) -> bool:
-        """Get chat welcome setting"""
-        active = await self.db.find_one({"chat_id": chat_id}, {"should_goodbye": 1})
-        return active.get("should_goodbye", True) if active else True
 
-    async def left_message(self, chat_id: int) -> str:
-        message = await self.db.find_one({"chat_id": chat_id}, {"custom_goodbye": 1})
-        return (
-            message.get(
-                "custom_goodbye", await self.text(chat_id, "default-goodbye", noformat=True)
-            )
-            if message
-            else await self.text(chat_id, "default-goodbye", noformat=True)
-        )
 
     async def clean_service(self, chat_id: int) -> bool:
         """Fetch clean service setting"""
@@ -149,21 +136,6 @@ class Greeting(plugin.Plugin):
             return clean.get("clean_service", True)
 
         return False  # Defaults off
-
-    async def set_custom_goodbye(self, chat_id: int, text: str) -> None:
-        """Set custom goodbye"""
-        await self.db.update_one({"chat_id": chat_id}, {"$set": {"custom_goodbye": text}})
-
-    async def del_custom_goodbye(self, chat_id: int) -> None:
-        """Delete custom goodbye message"""
-        await self.db.update_one({"chat_id": chat_id}, {"$unset": {"custom_goodbye": ""}})
-
-    async def greeting_setting(self, chat_id: int, key: str, value: bool) -> None:
-        """Turn on/off greetings in chats"""
-        if not value:
-            await self.db.update_one({"chat_id": chat_id}, {"$set": {key: False}}, upsert=True)
-        else:
-            await self.db.update_one({"chat_id": chat_id}, {"$unset": {key: ""}}, upsert=True)
 
     @command.filters(filters.admin_only)
     async def cmd_setgoodbye(self, ctx: command.Context) -> str:
