@@ -1,4 +1,3 @@
-
 from html import escape
 from typing import (
     Any,
@@ -124,13 +123,3 @@ class Greeting(plugin.Plugin):
             return None
         data = await self.chat_db.find_one({"chat_id": chat.id}, {"action_topic": True})
         return data.get("action_topic") if data else None
-
-
-
-    async def clean_service(self, chat_id: int) -> bool:
-        """Fetch clean service setting"""
-        clean = await self.db.find_one({"chat_id": chat_id}, {"clean_service": 1})
-        if clean:
-            return clean.get("clean_service", True)
-
-        return False  # Defaults off
